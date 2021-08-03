@@ -1,0 +1,139 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-deployment
+  labels:
+    app: crumbs-order
+spec:
+  selector:
+    matchLabels:
+      app: crumbs-order
+  template:
+    metadata:
+      labels:
+        app: crumbs-order
+    spec:
+      containers:
+      - name: order-service
+        image: order-service
+        ports:
+        - containerPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: email-deployment
+  labels:
+    app: crumbs-email
+spec:
+  selector:
+    matchLabels:
+      app: crumbs-email
+  template:
+    metadata:
+      labels:
+        app: crumbs-email
+    spec:
+      containers:
+      - name: email-service
+        image: email-service
+        ports:
+        - containerPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: account-deployment
+  labels:
+    app: crumbs-account
+spec:
+  selector:
+    matchLabels:
+      app: crumbs-account
+  template:
+    metadata:
+      labels:
+        app: crumbs-account
+    spec:
+      containers:
+      - name: account-service
+        image: account-service
+        ports:
+        - containerPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: restaurant-deployment
+  labels:
+    app: crumbs-restaurant
+spec:
+  selector:
+    matchLabels:
+      app: crumbs-restaurant
+  template:
+    metadata:
+      labels:
+        app: crumbs-restaurant
+    spec:
+      containers:
+      - name: restaurant-service
+        image: restaurant-service
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service
+spec:
+  type: NodePort
+  selector:
+    app: crumbs-order
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+    nodePort: 30000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: email-service
+spec:
+  type: NodePort
+  selector:
+    app: crumbs-email
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+    nodePort: 30100
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: account-service
+spec:
+  type: NodePort
+  selector:
+    app: crumbs-account
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+    nodePort: 30200
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: restaurant-service
+spec:
+  type: NodePort
+  selector:
+    app: crumbs-restaurant
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+    nodePort: 30300

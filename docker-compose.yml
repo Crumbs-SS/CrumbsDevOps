@@ -1,0 +1,50 @@
+version: '2'   
+services:
+    order-service:
+        container_name: order-service
+        build:
+            context: OrderService
+        image: order-service:latest
+        ports:
+            - 8080:8080
+        networks:
+            - crumbs-network
+    account-service:
+        container_name: account-service
+        build:
+            context: AccountService
+        image: account-service:latest
+        ports:
+            - 8081:8080
+        networks:
+            - crumbs-network
+    email-service:
+        container_name: email-service
+        build:
+            context: EmailService
+        image: email-service:latest
+        ports:
+            - 8082:8080
+        networks:
+            - crumbs-network
+    restaurant-service:
+        container_name: restaurant-service
+        build:
+            context: RestaurantService
+        image: restaurant-service:latest
+        ports:
+            - 8083:8080
+        networks: 
+            - crumbs-network
+    admin-front-end:
+        container_name: admin-front-end
+        build:
+            context: Admin-Front-end
+        image: admin-front-end:latest
+        ports:
+            - 8084:80
+        networks:
+            - crumbs-network
+networks:
+    crumbs-network:
+        driver: bridge
