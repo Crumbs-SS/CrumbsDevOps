@@ -10,20 +10,20 @@ resource "aws_internet_gateway" "internet_gateway" {
     vpc_id = aws_vpc.vpc.id
 }
 
-resource "aws_subnet" "public_subnet" {
+resource "aws_subnet" "public_subnet_1" {
     vpc_id = aws_vpc.vpc.id
     cidr_block = "10.0.1.0/24"
     map_public_ip_on_launch = true
     availability_zone = "us-east-1a"
 
     tags = {
-        Name = "public_subnet"    
+        Name = "public_subnet_1"    
     }
 }
 
 resource "aws_subnet" "public_subnet_2" {
     vpc_id = aws_vpc.vpc.id
-    cidr_block = "10.0.3.0/24"
+    cidr_block = "10.0.2.0/24"
     map_public_ip_on_launch = true
     availability_zone = "us-east-1b"
 
@@ -32,94 +32,29 @@ resource "aws_subnet" "public_subnet_2" {
     }
 }
 
-resource "aws_subnet" "private_subnet" {
+resource "aws_subnet" "private_subnet_1" {
     vpc_id = aws_vpc.vpc.id
-    cidr_block = "10.0.2.0/24"
+    cidr_block = "10.0.3.0/24"    
+    availability_zone = "us-east-1a"
 
     tags = {
-        Name = "private_subnet"    
+        Name = "private_subnet_1"    
     }
 }
 
-resource "aws_security_group" "public_ec2_security_group" {
-    name = "public_ec2_security_group"
-    description = "Allow SSH and HTTP to EC2 instance in public subnet"
+resource "aws_subnet" "private_subnet_2" {
     vpc_id = aws_vpc.vpc.id
-
-    ingress {
-        description = "SSH"
-        from_port = 22
-        to_port = 22
-        protocol = "tcp"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
-
-    ingress {
-        description = "HTTP"
-        from_port = 80
-        to_port = 80
-        protocol = "tcp"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
-
-    egress {
-        description = "Allow all outbound traffic"
-        from_port   = 0
-        to_port     = 0
-        protocol    = "-1"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
+    cidr_block = "10.0.4.0/24"    
+    availability_zone = "us-east-1b"
 
     tags = {
-        Name = "public_ec2_security_group"
-    }
-}
-
-resource "aws_security_group" "private_ec2_security_group" {
-    name = "private_ec2_security_group"
-    description = "Allow SSH, MySQL, and ICMP to private EC2 instance from the public subnet only"
-    vpc_id = aws_vpc.vpc.id
-
-    ingress {
-        description = "SSH"
-        from_port = 22
-        to_port = 22
-        protocol = "tcp"
-        cidr_blocks = ["10.0.1.0/24"]
-    }
-
-    ingress {
-        description = "MySQL"
-        from_port = 3306
-        to_port = 3306
-        protocol = "tcp"
-        cidr_blocks = ["10.0.1.0/24"]
-    }
-
-    ingress {
-        description = "MySQL"
-        from_port = -1
-        to_port = -1
-        protocol = "icmp"
-        cidr_blocks = ["10.0.1.0/24"]
-    }
-
-    egress {
-        description = "Allow all outbound traffic"
-        from_port   = 0
-        to_port     = 0
-        protocol    = "-1"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
-
-    tags = {
-        Name = "public_ec2_security_group"
+        Name = "private_subnet_2"    
     }
 }
 
 resource "aws_route_table" "public_route_table" {
     vpc_id = aws_vpc.vpc.id
-    
+
     route {
         cidr_block = "0.0.0.0/0"
         gateway_id = aws_internet_gateway.internet_gateway.id
@@ -130,8 +65,8 @@ resource "aws_route_table" "public_route_table" {
     }
 }
 
-resource "aws_route_table_association" "public_rt_association" {
-    subnet_id = aws_subnet.public_subnet.id
+resource "aws_route_table_association" "public_rt_association_1" {
+    subnet_id = aws_subnet.public_subnet_1.id
     route_table_id = aws_route_table.public_route_table.id
 }
 
@@ -153,30 +88,34 @@ resource "aws_route_table" "private_route_table" {
     }
 }
 
-resource "aws_route_table_association" "private_rt_association" {
-    subnet_id = aws_subnet.private_subnet.id
+resource "aws_route_table_association" "private_rt_association_1" {
+    subnet_id = aws_subnet.private_subnet_1.id
+    route_table_id = aws_route_table.private_route_table.id
+}
+
+resource "aws_route_table_association" "private_rt_association_2" {
+    subnet_id = aws_subnet.private_subnet_2.id
     route_table_id = aws_route_table.private_route_table.id
 }
 
 resource "aws_nat_gateway" "nat_gateway" {
-    allocation_id = aws_eip.eip.id
-    subnet_id = aws_subnet.public_subnet.id
+    connectivity_type = "private"
+    subnet_id = aws_subnet.private_subnet_1.id
 
     tags = {
         "Name" = "nat_gateway"
     }
 }
 
-resource "aws_eip" "eip" {
-    vpc = true
-
-    depends_on = [aws_internet_gateway.internet_gateway]
-}
-
 ######################################################
 
 resource "aws_ecs_cluster" "ecs_cluster" {
     name = "ecs_cluster"
+
+    setting {
+        name = "containerInsights"
+        value = "enabled"
+    }
 
     tags = {
         "Name" = "ecs_cluster"
@@ -194,7 +133,8 @@ resource "aws_iam_role" "ecs_execution_role" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "ec2.amazonaws.com"
+          "ec2.amazonaws.com",
+          "ecs-tasks.amazonaws.com"
         ]
       },
       "Action": "sts:AssumeRole"
@@ -212,6 +152,11 @@ resource "aws_iam_role_policy_attachment" "ecs_attachment" {
 resource "aws_iam_role_policy_attachment" "smi-attachment" {
   role       = aws_iam_role.ecs_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_role_policy_attachment" "ecs-task-permissions" {
+    role       = aws_iam_role.ecs_execution_role.name
+    policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
 resource "aws_ecs_task_definition" "order_service_task_definition" {
@@ -264,7 +209,7 @@ resource "aws_ecs_task_definition" "restaurant_service_task_definition" {
     container_definitions = jsonencode([
         {
             name = "restaurantservice"
-            image = "728482858339.dkr.ecr.us-east-1.amazonaws.com/restaurantservice"
+            image = "728482858339.dkr.ecr.us-east-1.amazonaws.com/restaurantservice:013966f"
             portMappings = [
                 {
                     containerPort = 8080
@@ -282,8 +227,9 @@ resource "aws_ecs_service" "order_service" {
     launch_type = "FARGATE"
 
     network_configuration {
-        subnets = [aws_subnet.private_subnet.id]
-        assign_public_ip = false
+        subnets = [aws_subnet.public_subnet_1.id, aws_subnet.public_subnet_2.id]
+        security_groups = [aws_security_group.alb_sg.id]
+        assign_public_ip = true
     }
 
     load_balancer {
@@ -301,8 +247,9 @@ resource "aws_ecs_service" "account_service" {
     launch_type = "FARGATE"
 
     network_configuration {
-        subnets = [aws_subnet.private_subnet.id]
-        assign_public_ip = false
+        subnets = [aws_subnet.public_subnet_1.id, aws_subnet.public_subnet_2.id]
+        security_groups = [aws_security_group.alb_sg.id]
+        assign_public_ip = true
     }
 
     load_balancer {
@@ -320,8 +267,9 @@ resource "aws_ecs_service" "restaurant_service" {
     launch_type = "FARGATE"
 
     network_configuration {
-        subnets = [aws_subnet.private_subnet.id]
-        assign_public_ip = false
+        subnets = [aws_subnet.public_subnet_1.id, aws_subnet.public_subnet_2.id]
+        security_groups = [aws_security_group.alb_sg.id]
+        assign_public_ip = true
     }
 
     load_balancer {
@@ -338,7 +286,9 @@ resource "aws_lb_target_group" "order_target_group" {
     target_type = "ip"
     vpc_id = aws_vpc.vpc.id
 
-    depends_on = [aws_lb.ecs_lb] 
+    health_check {
+      path = "/orders"
+    }
 }
 
 resource "aws_lb_target_group" "account_target_group" {
@@ -348,7 +298,9 @@ resource "aws_lb_target_group" "account_target_group" {
     target_type = "ip"
     vpc_id = aws_vpc.vpc.id
 
-    depends_on = [aws_lb.ecs_lb] 
+    health_check {
+      path = "/login"
+    }
 }
 
 resource "aws_lb_target_group" "restaurant_target_group" {
@@ -358,12 +310,14 @@ resource "aws_lb_target_group" "restaurant_target_group" {
     target_type = "ip"
     vpc_id = aws_vpc.vpc.id
 
-    depends_on = [aws_lb.ecs_lb] 
+    health_check {
+      path = "/restaurants"
+    }
 }
 
 resource "aws_lb_listener" "order_listener" {
     load_balancer_arn = aws_lb.ecs_lb.arn
-    port = 8081
+    port = 80
     protocol = "HTTP"
 
     default_action {
@@ -374,7 +328,7 @@ resource "aws_lb_listener" "order_listener" {
 
 resource "aws_lb_listener" "account_listener" {
     load_balancer_arn = aws_lb.ecs_lb.arn
-    port = 8082
+    port = 81
     protocol = "HTTP"
 
     default_action {
@@ -385,7 +339,7 @@ resource "aws_lb_listener" "account_listener" {
 
 resource "aws_lb_listener" "restaurant_listener" {
     load_balancer_arn = aws_lb.ecs_lb.arn
-    port = 8083
+    port = 82
     protocol = "HTTP"
 
     default_action {
@@ -394,10 +348,109 @@ resource "aws_lb_listener" "restaurant_listener" {
     }
 }
 
+resource "aws_lb_listener_rule" "order_listener_rule" {
+  listener_arn = aws_lb_listener.order_listener.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.order_target_group.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/orders/*"]
+    }
+  }
+}
+
+resource "aws_lb_listener_rule" "account_listener_rule" {
+  listener_arn = aws_lb_listener.account_listener.arn
+  priority     = 101
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.account_target_group.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/*"]
+    }
+  }
+}
+
+resource "aws_lb_listener_rule" "restaurant_listener_rule" {
+  listener_arn = aws_lb_listener.restaurant_listener.arn
+  priority     = 102
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.restaurant_target_group.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/restaurants/*"]
+    }
+  }
+}
+
+resource "aws_security_group" "alb_sg" {
+    name = "alb_sg"
+    vpc_id = aws_vpc.vpc.id
+
+    ingress {
+        description = "tcp 8080"
+        from_port = 0
+        to_port = 80
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
+    ingress {
+        description = "tcp 8080"
+        from_port = 0
+        to_port = 81
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
+    ingress {
+        description = "tcp 8080"
+        from_port = 0
+        to_port = 82
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
+    ingress {
+        description = "tcp 8080"
+        from_port = 0
+        to_port = 8080
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
+    egress {
+        description = "Allow all outbound traffic"
+        from_port   = 0
+        to_port     = 0
+        protocol    = "-1"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
+    tags = {
+        Name = "alb_sg"
+    }
+}
+
 resource "aws_lb" "ecs_lb" {
     name = "ecs-lb"
+    internal = false
     load_balancer_type = "application"
-    subnets = [aws_subnet.public_subnet.id, aws_subnet.public_subnet_2.id]
+    subnets = [aws_subnet.public_subnet_1.id, aws_subnet.public_subnet_2.id]#, aws_subnet.private_subnet.id]
+    security_groups = [aws_security_group.alb_sg.id]
 
     tags = {
         Name = "ecs_lb"

@@ -1,0 +1,43 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: Crumbs-Cluster
+  region: us-east-1
+
+vpc:
+  id: "vpc-0a771f70312d0ce7b"  #Get updated vpc id
+  cidr: "10.0.0.0/16"
+  subnets:
+    private:
+      private_subnet_1:
+        id: "subnet-0950d09e27607eb7a"  #Get updated subnet id
+        cidr: "10.0.2.0/24"
+      private_subnet_2:
+        id: "subnet-0c98172ed0aabd2d7"
+        cidr: "10.0.4.0/24"
+    public:
+      public_subnet_1:
+        id: "subnet-0338ed762ba26ef22"  #Get updated subnet id
+        cidr: "10.0.1.0/24"
+      public_subnet_2:
+        id: "subnet-040efa8f35697aaad"  #Get updated subnet id
+        cidr: "10.0.3.0/24"
+
+nodeGroups:
+  - name: public-ng
+    instanceType: t2.medium
+    minSize: 1
+    maxSize: 3
+    desiredCapacity: 2
+    subnets:
+      - public_subnet_1
+      - public_subnet_2
+  # - name: private-ng
+  #   instanceType: t2.medium
+  #   minSize: 1
+  #   maxSize: 3
+  #   desiredCapacity: 2  
+  #   subnets:
+  #     - private_subnet
+  #   privateNetworking: true
