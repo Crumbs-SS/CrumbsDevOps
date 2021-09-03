@@ -1,6 +1,9 @@
 # Local .terraform directories
 **/.terraform/*
 
+Terraform-Old
+Jenkins
+
 # .tfstate files
 *.tfstate
 *.tfstate.*
