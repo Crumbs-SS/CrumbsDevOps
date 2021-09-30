@@ -207,7 +207,7 @@ Resources:
         - IpProtocol: tcp  
           FromPort: 22 
           ToPort: 22  
-          CidrIp: 99.78.93.96/32
+          CidrIp: ## PUT YOUR PUBLIC IP ADDRESS HERE ##
 
   # Container Security Group
   ContainerSecurityGroup:
