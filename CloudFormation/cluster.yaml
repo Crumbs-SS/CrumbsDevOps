@@ -1,0 +1,110 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "Order: 3 | ECS Cluster and Microservices"
+
+Parameters:
+  MicroserviceTemplateURL:
+    Description: S3 Bucket URL for Microservice CloudFormation Template
+    Type: String
+
+Resources:
+  # FARGATE Cluster
+  ECSCluster:
+    Type: 'AWS::ECS::Cluster'
+    Properties:
+      ClusterName: CrumbsFargateCluster
+      CapacityProviders:
+        - FARGATE
+        - FARGATE_SPOT
+      DefaultCapacityProviderStrategy:
+        - CapacityProvider: FARGATE
+          Weight: 1
+        - CapacityProvider: FARGATE_SPOT
+          Weight: 1
+          
+  # Container Execution Role
+  ContainerExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: Crumbs-ContainerExecutionRole
+      Description: Role for containers
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: ecs-tasks.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+  
+  # Task Execution Role
+  TaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: Crumbs-TaskExecutionRole
+      Description: Role for tasks
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: ecs-tasks.amazonaws.com
+          Action: sts:AssumeRole
+
+  # Account Service
+  AccountService:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        ServiceName: AccountService
+        ContainerName: account-service
+        ContainerPort: 8080
+        Cluster: !Ref ECSCluster
+        TaskExecutionRole: !Ref TaskExecutionRole
+        ContainerExecutionRole: !Ref ContainerExecutionRole
+        Priority: 2
+      TemplateURL: !Ref MicroserviceTemplateURL
+      TimeoutInMinutes: 30
+  
+  # Order Service
+  OrderService:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        ServiceName: OrderService
+        ContainerName: order-service
+        ContainerPort: 8010
+        Cluster: !Ref ECSCluster
+        TaskExecutionRole: !Ref TaskExecutionRole
+        ContainerExecutionRole: !Ref ContainerExecutionRole
+        Priority: 3
+      TemplateURL: !Ref MicroserviceTemplateURL
+      TimeoutInMinutes: 30
+
+  # Restaurant Service
+  RestaurantService:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        ServiceName: RestaurantService
+        ContainerName: restaurant-service
+        ContainerPort: 8070
+        Cluster: !Ref ECSCluster
+        TaskExecutionRole: !Ref TaskExecutionRole
+        ContainerExecutionRole: !Ref ContainerExecutionRole
+        Priority: 4
+      TemplateURL: !Ref MicroserviceTemplateURL
+      TimeoutInMinutes: 30
+
+  # Payment Service
+  PaymentService:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        ServiceName: PaymentService
+        ContainerName: payment-service
+        ContainerPort: 8090
+        Cluster: !Ref ECSCluster
+        TaskExecutionRole: !Ref TaskExecutionRole
+        ContainerExecutionRole: !Ref ContainerExecutionRole
+        Priority: 5
+      TemplateURL: !Ref MicroserviceTemplateURL
+      TimeoutInMinutes: 30
