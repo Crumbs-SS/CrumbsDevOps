@@ -40,3 +40,7 @@ Navigate to Cloud Formation section and click create stack. Click ```Template is
 - Click Test Connection. 
 
 After click Test Connection you may get a window that says Workbench was unable validate the ssh host. If there's an option for continue or connect just select that option and the connection should still go through successfully.
+
+## Delete Stacks
+
+Since the Database and Cluster stacks both rely on the VPC stack you'll need to get rid of both of those stacks first before you can delete the VPC stack.
