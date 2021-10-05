@@ -1,0 +1,92 @@
+{
+    "AWSTemplateFormatVersion" : "2010-09-09",
+
+    "Description" : "Cloud Formation Template for front-end deployment",
+  
+    "Parameters" : {
+      "HostedZone" : {
+        "Type" : "String",
+        "Description" : "The DNS name of an existing Amazon Route 53 hosted zone",
+        "AllowedPattern" : "(?!-)[a-zA-Z0-9-.]{1,63}(?<!-)",
+        "ConstraintDescription" : "must be a valid DNS zone name."
+      },
+      "HostedZoneId" : {
+        "Type" : "AWS::Route53::HostedZone::Id"
+      },
+      "BucketName" : {
+          "Type" : "String",
+          "Description" : "S3 bucket name"
+      }
+      
+    },
+
+    "Resources" : {
+        
+        "S3BucketForWebsiteContent" : {
+          "Type" : "AWS::S3::Bucket",
+          "Properties" : {
+            "AccessControl" : "PublicRead",
+            "BucketName" : { "Ref" : "BucketName" },
+            "WebsiteConfiguration" : {
+               "IndexDocument" : "index.html"
+            }
+          }
+        },
+        "CertificateManager" : {
+            "Type" : "AWS::CertificateManager::Certificate",
+            "Properties" : {
+                "DomainName" : { "Ref" : "HostedZone" },
+                "ValidationMethod" : "DNS"
+            }
+        },
+
+        "WebsiteCDN" : {
+            "Type" : "AWS::CloudFront::Distribution",
+            "Properties" : {
+               "DistributionConfig" : {
+                 "Comment" : "CDN for S3-backed website",
+                 "Aliases" : [{"Ref" : "HostedZone"}],
+                 "Enabled" : "true",
+                 "ViewerCertificate" : {
+                     "AcmCertificateArn" : {"Ref" : "CertificateManager"},
+                     "SslSupportMethod" : "sni-only"
+                 },
+             "DefaultCacheBehavior" : {
+               "ForwardedValues" : { "QueryString" : "true" },
+               "TargetOriginId" : "only-origin",
+               "ViewerProtocolPolicy" : "allow-all"
+             },
+                 "DefaultRootObject" : "index.html",
+             "Origins" : [
+               { "CustomOriginConfig" : 
+                       {
+                         "HTTPPort" : "80",
+                         "HTTPSPort" : "443",
+                         "OriginProtocolPolicy" : "http-only"
+                       },
+                "DomainName" : { "Fn::Join" : ["", [{"Ref" : "S3BucketForWebsiteContent"}, ".s3-website-", {"Ref" : "AWS::Region"}, ".amazonaws.com"]]},
+                 "Id" : "only-origin"
+                   }]
+               }
+            }
+          },
+          "WebsiteDNSName" : {
+            "Type" : "AWS::Route53::RecordSet",
+            "Properties" : {
+                "HostedZoneId" : {"Ref" : "HostedZoneId"},
+                "Name" : {"Ref" : "HostedZone"},
+                "Type" : "A",
+                "AliasTarget": {
+                    "DNSName": {"Fn::GetAtt": ["WebsiteCDN","DomainName"]},
+                    "HostedZoneId": "Z2FDTNDATAQYW2"
+                }
+            }
+          }
+    },
+    "Outputs" : {
+        "WebsiteURL" : {
+          "Value" : {"Fn::Join" : [ "", ["http://", {"Ref" : "WebsiteDNSName"} ]] },
+          "Description" : "The URL of the newly created website"
+        }
+      }
+}
