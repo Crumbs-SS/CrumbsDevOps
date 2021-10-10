@@ -44,7 +44,7 @@ resource "aws_security_group" "bastion-sg" {
       description      = "Enable SSH access from personal IP"
       from_port        = 22
       to_port          = 22
-      cidr_blocks      = ["${var.personal-ip}/32"]
+      cidr_blocks      = ["${var.personal_ip}/32"]
       ipv6_cidr_blocks = []
       prefix_list_ids  = []
       security_groups  = []
@@ -151,14 +151,14 @@ resource "aws_security_group" "database-sg" {
 
 
   tags = {
-    "Name" = "${var.stack-name}-container-sg"
+    "Name" = "${var.stack-name}-database-sg"
   }
 }
 
 resource "aws_instance" "bastion-instance" {
   instance_type          = "t2.micro"
   key_name               = var.bastion-key
-  ami                    = "ami-087c17d1fe0178315"
+  ami                    = "ami-02e136e904f3da870"
   subnet_id              = aws_subnet.public-subnets[1].id
   vpc_security_group_ids = [aws_security_group.bastion-sg.id]
 

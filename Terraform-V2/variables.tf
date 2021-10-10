@@ -1,17 +1,12 @@
-variable "personal-ip" {
+variable "personal_ip" {
   type = string
 }
-
-variable "bastion-key" {
+variable "bastion_key" {
   type = string
 }
-
-variable "db-password" {
-  description = "Password for MySql database access"
+variable "db_username" {
   type = string
 }
-
-variable "db-username" {
-  description = "Username for MySql database access"
+variable "db_password" {
   type = string
 }

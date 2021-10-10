@@ -5,6 +5,18 @@ Parameters:
   MicroserviceTemplateURL:
     Description: S3 Bucket URL for Microservice CloudFormation Template
     Type: String
+  VPC:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC to host Fargate tasks inside
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet::Id
+    Description: Private Subnet 1
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet::Id
+    Description: Private Subnet 2
+  ContainerSecurityGroup:
+    Description: Container Security Group
+    Type: AWS::EC2::SecurityGroup::Id
 
 Resources:
   # FARGATE Cluster
@@ -35,6 +47,17 @@ Resources:
           Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: CWLogsPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+                Effect: Allow
   
   # Task Execution Role
   TaskExecutionRole:
@@ -55,12 +78,18 @@ Resources:
     Properties:
       Parameters:
         ServiceName: AccountService
-        ContainerName: account-service
+        ContainerName: accountservice
         ContainerPort: 8080
         Cluster: !Ref ECSCluster
         TaskExecutionRole: !Ref TaskExecutionRole
         ContainerExecutionRole: !Ref ContainerExecutionRole
         Priority: 2
+        VPC: !Ref VPC
+        PrivateSubnet1: !Ref PrivateSubnet1
+        PrivateSubnet2: !Ref PrivateSubnet2
+        Listener: !Ref Listener
+        ContainerSecurityGroup: !Ref ContainerSecurityGroup
+        ListenerRulePath: account-service
       TemplateURL: !Ref MicroserviceTemplateURL
       TimeoutInMinutes: 30
   
@@ -70,12 +99,18 @@ Resources:
     Properties:
       Parameters:
         ServiceName: OrderService
-        ContainerName: order-service
+        ContainerName: orderservice
         ContainerPort: 8010
         Cluster: !Ref ECSCluster
         TaskExecutionRole: !Ref TaskExecutionRole
         ContainerExecutionRole: !Ref ContainerExecutionRole
         Priority: 3
+        VPC: !Ref VPC
+        PrivateSubnet1: !Ref PrivateSubnet1
+        PrivateSubnet2: !Ref PrivateSubnet2
+        Listener: !Ref Listener
+        ContainerSecurityGroup: !Ref ContainerSecurityGroup 
+        ListenerRulePath: order-service
       TemplateURL: !Ref MicroserviceTemplateURL
       TimeoutInMinutes: 30
 
@@ -85,12 +120,18 @@ Resources:
     Properties:
       Parameters:
         ServiceName: RestaurantService
-        ContainerName: restaurant-service
+        ContainerName: restaurantservice
         ContainerPort: 8070
         Cluster: !Ref ECSCluster
         TaskExecutionRole: !Ref TaskExecutionRole
         ContainerExecutionRole: !Ref ContainerExecutionRole
         Priority: 4
+        VPC: !Ref VPC
+        PrivateSubnet1: !Ref PrivateSubnet1
+        PrivateSubnet2: !Ref PrivateSubnet2
+        Listener: !Ref Listener
+        ContainerSecurityGroup: !Ref ContainerSecurityGroup 
+        ListenerRulePath: restaurant-service
       TemplateURL: !Ref MicroserviceTemplateURL
       TimeoutInMinutes: 30
 
@@ -100,11 +141,60 @@ Resources:
     Properties:
       Parameters:
         ServiceName: PaymentService
-        ContainerName: payment-service
+        ContainerName: paymentservice
         ContainerPort: 8090
         Cluster: !Ref ECSCluster
         TaskExecutionRole: !Ref TaskExecutionRole
         ContainerExecutionRole: !Ref ContainerExecutionRole
         Priority: 5
+        VPC: !Ref VPC
+        PrivateSubnet1: !Ref PrivateSubnet1
+        PrivateSubnet2: !Ref PrivateSubnet2
+        Listener: !Ref Listener
+        ContainerSecurityGroup: !Ref ContainerSecurityGroup 
+        ListenerRulePath: payment-service
       TemplateURL: !Ref MicroserviceTemplateURL
       TimeoutInMinutes: 30
+  
+  # Email Service
+  EmailService:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        ServiceName: EmailService
+        ContainerName: emailservice
+        ContainerPort: 8100
+        Cluster: !Ref ECSCluster
+        TaskExecutionRole: !Ref TaskExecutionRole
+        ContainerExecutionRole: !Ref ContainerExecutionRole
+        Priority: 6
+        VPC: !Ref VPC
+        PrivateSubnet1: !Ref PrivateSubnet1
+        PrivateSubnet2: !Ref PrivateSubnet2
+        Listener: !Ref Listener
+        ContainerSecurityGroup: !Ref ContainerSecurityGroup
+        ListenerRulePath: email-service
+      TemplateURL: !Ref MicroserviceTemplateURL
+      TimeoutInMinutes: 30
+  
+  # ALB Listener
+  Listener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref DefaultTargetGroup
+      LoadBalancerArn: !Sub '{{resolve:secretsmanager:dev/crumbs/alb/arn:SecretString}}'
+      Port: 80
+      Protocol: HTTP
+
+  # Default Target Group
+  DefaultTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPath: /actuator/health
+      Name: default-tg
+      Protocol: HTTP
+      Port: 80
+      TargetType: ip
+      VpcId: !Ref VPC

@@ -18,7 +18,7 @@ resource "aws_internet_gateway" "igw" {
 
 resource "aws_eip" "natgwEIP" {
   tags = {
-    "Name" = "${var.stack_name}-natgw-eip"
+    "Name" = "${var.stack-name}-natgw-eip"
   }
   depends_on = [aws_internet_gateway.igw]
 }
@@ -28,7 +28,7 @@ resource "aws_nat_gateway" "natgw" {
   subnet_id     = aws_subnet.public-subnets[1].id
 
   tags = {
-    "Name" = "${var.stack_name}-nat-gw"
+    "Name" = "${var.stack-name}-nat-gw"
   }
 
   depends_on = [aws_internet_gateway.igw]

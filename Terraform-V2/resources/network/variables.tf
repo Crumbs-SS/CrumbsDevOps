@@ -1,5 +1,5 @@
 
-variable "personal-ip" {
+variable "personal_ip" {
   type = string
 }
 variable "bastion-key" {

@@ -1,6 +1,4 @@
-# Should be stored in an S3 bucket. Use the URL to this
-# S3 bucket in the cluster.yaml file.
-
+# Stored in S3
 AWSTemplateFormatVersion: 2010-09-09
 Description: "In S3 | ECS Cluster and Microservices"
 
@@ -26,6 +24,24 @@ Parameters:
   Priority:
     Description: Priority for Listener Rule
     Type: Number
+  VPC:
+    Description: VPC
+    Type: String
+  PrivateSubnet1:
+    Description: Private Subnet 1
+    Type: String
+  PrivateSubnet2:
+    Description: Private Subnet 2
+    Type: String
+  Listener:
+    Description: Listener
+    Type: String
+  ContainerSecurityGroup:
+    Type: String
+    Description: Container Security Group
+  ListenerRulePath:
+    Type: String
+    Description: The path for the service
   
 Resources:
 
@@ -47,10 +63,10 @@ Resources:
         AwsvpcConfiguration:
           AssignPublicIp: DISABLED
           Subnets:
-            - !ImportValue PrivateSubnet1
-            - !ImportValue PrivateSubnet2
+            - !Ref PrivateSubnet1
+            - !Ref PrivateSubnet2
           SecurityGroups:
-            - !ImportValue ContainerSecurityGroup
+            - !Ref ContainerSecurityGroup
       LoadBalancers:
         - ContainerName: !Ref ContainerName
           ContainerPort: !Ref ContainerPort
@@ -69,7 +85,7 @@ Resources:
       Protocol: HTTP
       Port: !Ref ContainerPort
       TargetType: ip
-      VpcId: !ImportValue VPC
+      VpcId: !Ref VPC
 
   # Listener Rule
   ListenerRule:
@@ -78,11 +94,11 @@ Resources:
       Conditions:
         - Field: path-pattern
           Values:
-            - !Sub '/${ContainerName}/**'
+            - !Sub '/${ListenerRulePath}/**'
       Actions:
         - Type: forward
           TargetGroupArn: !Ref TargetGroup
-      ListenerArn: !ImportValue Listener
+      ListenerArn: !Ref Listener
       Priority: !Ref Priority
 
   # Fargate Task Definition for Service
@@ -101,4 +117,32 @@ Resources:
           PortMappings:
             - ContainerPort: !Ref ContainerPort
           Essential: true
+          Environment:
+            - Name: DB_ENDPOINT
+              Value: !Sub '{{resolve:secretsmanager:DB_ENDPOINT:SecretString}}'
+            - Name: DB_USERNAME
+              Value: !Sub '{{resolve:secretsmanager:DB_USERNAME:SecretString}}'
+            - Name: DB_PASSWORD
+              Value: !Sub '{{resolve:secretsmanager:DB_PASSWORD:SecretString}}'
+            - Name: AWS_ACCESS_KEY_ID
+              Value: !Sub '{{resolve:secretsmanager:AWS_ACCESS_KEY_ID:SecretString}}'
+            - Name: AWS_SECRET_ACCESS_KEY
+              Value: !Sub '{{resolve:secretsmanager:AWS_SECRET_ACCESS_KEY:SecretString}}'
+            - Name: JWT_SECRET
+              Value: !Sub '{{resolve:secretsmanager:JWT_SECRET:SecretString}}'
+            - Name: GMAPS_API_KEY
+              Value: !Sub '{{resolve:secretsmanager:prod/crumbs/geo:SecretString}}'
+            - Name: STRIPE_API_KEY
+              Value: !Sub '{{resolve:secretsmanager:STRIPE_API_KEY:SecretString}}'
+            - Name: JWT_ISSUER
+              Value: !Sub '{{resolve:secretsmanager:JWT_ISSUER:SecretString}}'
+            - Name: JWT_AUDIENCE
+              Value: !Sub '{{resolve:secretsmanager:JWT_AUDIENCE:SecretString}}'
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-create-group: true
+              awslogs-group: !Sub 'awslogs-${ContainerName}'
+              awslogs-region: us-east-1
+              awslogs-stream-prefix: !Sub '${ContainerName}'
       NetworkMode: awsvpc

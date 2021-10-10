@@ -1,15 +1,12 @@
-provider "aws" {}
-
-locals {
-  root-folder = "./resources"
+provider "aws" {
+  region = "us-east-1"
 }
 
 module "network" {
-  source = "${local.root-folder}/vpc"
-  stack-name = var.stack-name
-
-  personal-ip = var.personal-ip
-  bastion-key = var.bastion-key
-  db-password = var.db-password
-  db-username = var.db-username
+  source = "./resources/network"
+  stack-name = "crumbs"
+  personal_ip = "${var.personal_ip}"
+  bastion-key = "${var.bastion_key}"
+  db-password = "${var.db_password}"
+  db-username = "${var.db_username}"
 }

@@ -1,6 +1,6 @@
 output "ssh-command" {
     description = "Run this command in your terminal to ssh into bastion instance."
-    value = "ssh -i ${var.bastion_key}.pem ec2-user@${aws_instance.bastion-instance.public_dns}"
+    value = "ssh -i ${var.bastion-key}.pem ec2-user@${aws_instance.bastion-instance.public_dns}"
 }
 
 output "bastion-host-ip" {
