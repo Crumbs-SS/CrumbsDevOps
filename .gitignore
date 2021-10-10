@@ -2,6 +2,7 @@
 **/.terraform/*
 
 Terraform-Old
+Terraform-V2/terraform.tfvars
 Jenkins
 
 # .tfstate files
