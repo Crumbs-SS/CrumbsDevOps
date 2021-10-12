@@ -8,7 +8,6 @@ pipeline {
   stages {
     stage('Install Terraform') {
       steps {
-        sh "apt-get install unzip"
         sh "wget https://releases.hashicorp.com/terraform/1.0.8/terraform_1.0.8_linux_386.zip"
         sh "unzip terraform_1.0.7_linux_amd64.zip"
         sh "mv terraform /usr/local/bin/"
