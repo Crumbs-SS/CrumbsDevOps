@@ -7,14 +7,14 @@ pipeline {
   }
   stages {
     stage('Install Terraform') {
-      steps {
+      steps {        
+        sh "cd Terraform"
         sh "wget https://releases.hashicorp.com/terraform/1.0.8/terraform_1.0.8_linux_386.zip"
         sh "unzip terraform_1.0.8_linux_386.zip"
       }  
     }
     stage('Terraform Init') {
       steps {
-        sh "cd Terraform"
         sh "../terraform init"
       }
     }
