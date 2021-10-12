@@ -8,31 +8,33 @@ pipeline {
   stages {
     stage('Install Terraform') {
       steps {        
-        sh "cd Terraform"
-        sh "wget https://releases.hashicorp.com/terraform/1.0.8/terraform_1.0.8_linux_386.zip"
-        sh "ls"
-        sh "unzip -o terraform_1.0.8_linux_386.zip"
-        sh "ls"
+        dir('Terraform') {
+          sh "wget https://releases.hashicorp.com/terraform/1.0.8/terraform_1.0.8_linux_386.zip"
+          sh "ls"
+          sh "unzip -o terraform_1.0.8_linux_386.zip"
+          sh "ls"
+        }
       }  
     }
     stage('Terraform Init') {
-      steps {          
-        sh "ls"
-        sh "cd Terraform"
-        sh "ls"
-        sh "./terraform init"
+      steps { 
+        dir('Terraform')  {
+          sh "./terraform init"
+        }
       }
     }
     stage('Terraform Plan') {
       steps {
-        sh "cd Terraform"
-        sh "./terraform plan -out=tfplan"
+        dir('Terraform') {
+          sh "./terraform plan -out=tfplan"
+        }
       }
     }
     stage('Terraform Apply') {
       steps {
-        sh "cd Terraform"
-        sh "./terraform apply -auto-approve tfplan"
+        dir('Terraform') {
+          sh "./terraform apply -auto-approve tfplan"
+        }
       }
     }
   }
