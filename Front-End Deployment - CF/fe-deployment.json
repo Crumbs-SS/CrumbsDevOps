@@ -85,7 +85,7 @@
     },
     "Outputs" : {
         "WebsiteURL" : {
-          "Value" : {"Fn::Join" : [ "", ["http://", {"Ref" : "WebsiteDNSName"} ]] },
+          "Value" : {"Fn::Join" : [ "", ["https://", {"Ref" : "WebsiteDNSName"} ]] },
           "Description" : "The URL of the newly created website"
         }
       }
