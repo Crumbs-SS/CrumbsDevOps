@@ -10,9 +10,7 @@ pipeline {
       steps {        
         dir('Terraform') {
           sh "wget https://releases.hashicorp.com/terraform/1.0.8/terraform_1.0.8_linux_386.zip"
-          sh "ls"
           sh "unzip -o terraform_1.0.8_linux_386.zip"
-          sh "ls"
         }
       }  
     }
