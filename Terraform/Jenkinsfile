@@ -8,8 +8,10 @@ pipeline {
   stages {
     stage('Terraform Init') {
       steps {
+        sh "curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -"
+        sh "sudo apt-add-repository \"deb [arch=$(dpkg --print-architecture)] https://apt.releases.hashicorp.com $(lsb_release -cs) main\""
+        sudo apt install terraform
         sh "cd Terraform"
-        sh "PATH=/bin/terraform"
         sh "terraform init"
       }
     }
