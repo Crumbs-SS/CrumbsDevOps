@@ -21,20 +21,20 @@ pipeline {
         }
       }
     }
-    stage('Terraform Plan') {
-      steps {
-        dir('Terraform') {
-          sh "./terraform plan -out=tfplan"
-        }
-      }
-    }
-    stage('Terraform Apply') {
-      steps {
-        dir('Terraform') {
-          sh "./terraform apply -auto-approve tfplan"
-        }
-      }
-    }
+    // stage('Terraform Plan') {
+    //   steps {
+    //     dir('Terraform') {
+    //       sh "./terraform plan -out=tfplan"
+    //     }
+    //   }
+    // }
+    // stage('Terraform Apply') {
+    //   steps {
+    //     dir('Terraform') {
+    //       sh "./terraform apply -auto-approve tfplan"
+    //     }
+    //   }
+    // }
     stage('Terraform Destroy') {
       steps {
         dir('Terraform') {
