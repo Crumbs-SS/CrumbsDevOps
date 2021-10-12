@@ -1,0 +1,26 @@
+pipeline {
+  environment {
+    TF_VAR_aws_id = credentials('aws_id')
+    TF_VAR_access_key = credentials('access_key')
+    TF_VAR_secret_key = credentials('secret_key')
+  }
+  stages {
+    stage('Terraform Init') {
+      steps {
+        sh "cd Terraform"
+        sh "terraform init"
+      }
+    }
+    stage('Terraform Plan') {
+      steps {
+        sh "terraform plan -out=tfplan"
+      }
+    }
+    stage('Terraform Apply') {
+      steps {
+        input 'Apply Plan'
+        sh "terraform apply -auto-approve tfplan"
+      }
+    }
+  }
+}

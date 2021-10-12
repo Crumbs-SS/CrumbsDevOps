@@ -7,7 +7,7 @@ resource "aws_route_table" "public_route_table" {
     }
 
     tags = {
-        Name = "public_route_table"
+        Name = format("%s_%s", var.vpc_name, "public_route_table")
     }
 }
 
@@ -20,6 +20,6 @@ resource "aws_route_table" "private_route_table" {
     }
 
     tags = {
-        Name = "private_route_table"
+        Name = format("%s_%s", var.vpc_name, "private_route_table")
     }
 }

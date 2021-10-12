@@ -8,19 +8,29 @@ variable "container_port" {
     description = "The port that the container exposes"
 }
 
+variable "listener_path" {
+    type = string
+    description = "Path for the load balancer listener"
+}
+
 variable "health_check_path" {
     type = string
     description = "Path for the target group's health checks"
 }
 
-variable "listener_path" {
-    type = list(string)
-    description = "Path pattern for the load balancer listener to use for this service"
-}
-
 variable "ecr_repository" {
     type = string
     description = "URL for the ecr repository to pull images from"
+}
+
+variable "memory" {
+    type = number
+    description = "How much memory to allocate for this microservice"
+}
+
+variable "cpu" {
+    type = number
+    description = "How much cpu to allocate for this microservice"
 }
 
 #Resources from other modules
@@ -34,9 +44,14 @@ variable "vpc_id" {
     description = "ID of the vpc being used"
 }
 
+variable "alb_arn" {
+    type = string
+    description = "ARN of the ALB"
+}
+
 variable "alb_listener" {
     type = string
-    description = "ARN of the ALB's listener for the listener rules to be added to"
+    description = "ARN of the ALB Listener"
 }
 
 variable "ecs_cluster" {

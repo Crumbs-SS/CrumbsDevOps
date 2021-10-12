@@ -8,29 +8,7 @@ resource "aws_lb_target_group" "target_group" {
 
     health_check {
       path = var.health_check_path
+      healthy_threshold = 2
+      interval = 120
     }
 }
-
-# resource "aws_lb_target_group" "account_target_group" {
-#     name = "account-target-group"
-#     port = 8080
-#     protocol = "HTTP"
-#     target_type = "ip"
-#     vpc_id = aws_vpc.vpc.id
-
-#     health_check {
-#       path = "/login"
-#     }
-# }
-
-# resource "aws_lb_target_group" "restaurant_target_group" {
-#     name = "restaurant-target-group"
-#     port = 8080
-#     protocol = "HTTP"
-#     target_type = "ip"
-#     vpc_id = aws_vpc.vpc.id
-
-#     health_check {
-#       path = "/restaurants"
-#     }
-# }

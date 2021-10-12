@@ -6,7 +6,7 @@ resource "aws_lb" "ecs_lb" {
     security_groups = [aws_security_group.alb_sg.id]
 
     tags = {
-        Name = "ecs_lb"
+        Name = format("%s_%s", var.ecs_name, "alb")
     }
 } 
 
@@ -22,7 +22,6 @@ resource "aws_lb_listener" "alb_listener" {
 }
 
 resource "aws_lb_target_group" "default_target_group" {
-    #name = "default-target-group"
     port = 8080
     protocol = "HTTP"
     vpc_id = var.vpc_id
@@ -40,26 +39,42 @@ resource "aws_security_group" "alb_sg" {
         cidr_blocks = ["0.0.0.0/0"]
     }
 
-    # ingress {
-    #     description = "tcp 8080"
-    #     from_port = 0
-    #     to_port = 81
-    #     protocol = "tcp"
-    #     cidr_blocks = ["0.0.0.0/0"]
-    # }
+    ingress {
+        description = "tcp 8060"
+        from_port = 0
+        to_port = 8010
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
 
-    # ingress {
-    #     description = "tcp 8080"
-    #     from_port = 0
-    #     to_port = 82
-    #     protocol = "tcp"
-    #     cidr_blocks = ["0.0.0.0/0"]
-    # }
+    ingress {
+        description = "tcp 8070"
+        from_port = 0
+        to_port = 8070
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
 
     ingress {
         description = "tcp 8080"
         from_port = 0
         to_port = 8080
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
+    ingress {
+        description = "tcp 8090"
+        from_port = 0
+        to_port = 8090
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
+    ingress {
+        description = "tcp 8100"
+        from_port = 0
+        to_port = 8100
         protocol = "tcp"
         cidr_blocks = ["0.0.0.0/0"]
     }
@@ -73,6 +88,6 @@ resource "aws_security_group" "alb_sg" {
     }
 
     tags = {
-        Name = "alb_sg"
+        Name = format("%s_%s", var.ecs_name, "alb_sg")
     }
 }

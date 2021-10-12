@@ -1,6 +1,8 @@
 # Local .terraform directories
 **/.terraform/*
 
+*.tfvars
+
 Terraform-Old
 Jenkins
 
