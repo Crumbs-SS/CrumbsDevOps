@@ -14,18 +14,20 @@ pipeline {
       }  
     }
     stage('Terraform Init') {
-      steps {
+      steps {        
+        sh "cd Terraform"
         sh "./terraform init"
       }
     }
     stage('Terraform Plan') {
       steps {
+        sh "cd Terraform"
         sh "./terraform plan -out=tfplan"
       }
     }
     stage('Terraform Apply') {
       steps {
-        input 'Apply Plan'
+        sh "cd Terraform"
         sh "./terraform apply -auto-approve tfplan"
       }
     }
