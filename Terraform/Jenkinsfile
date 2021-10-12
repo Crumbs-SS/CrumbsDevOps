@@ -5,13 +5,11 @@ pipeline {
     TF_VAR_access_key = credentials('access_key')
     TF_VAR_secret_key = credentials('secret_key')
   }
-  tools {
-    Terraform 'terraform'
-  }
   stages {
     stage('Terraform Init') {
       steps {
         sh "cd Terraform"
+        sh "PATH=/bin/terraform"
         sh "terraform init"
       }
     }
