@@ -6,11 +6,16 @@ pipeline {
     TF_VAR_secret_key = credentials('secret_key')
   }
   stages {
+    stage('Install Terraform') {
+      steps {
+        sh "sudo apt-get install unzip"
+        sh "wget https://releases.hashicorp.com/terraform/1.0.8/terraform_1.0.8_linux_386.zip"
+        sh "unzip terraform_1.0.7_linux_amd64.zip"
+        sh "sudo mv terraform /usr/local/bin/"
+      }  
+    }
     stage('Terraform Init') {
       steps {
-        sh "curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -"
-        sh "sudo apt-add-repository \"deb [arch=$(dpkg --print-architecture)] https://apt.releases.hashicorp.com $(lsb_release -cs) main\""
-        sudo apt install terraform
         sh "cd Terraform"
         sh "terraform init"
       }
