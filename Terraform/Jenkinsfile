@@ -1,5 +1,10 @@
 pipeline {
-  agent any
+  agent {
+    docker {
+      image 'hashicorp/terraform:light'
+      args '--entrypoint='
+    }
+  }
   environment {
     TF_VAR_aws_id = credentials('aws_id')
     TF_VAR_access_key = credentials('access_key')
