@@ -185,8 +185,14 @@ Resources:
         - Type: forward
           TargetGroupArn: !Ref DefaultTargetGroup
       LoadBalancerArn: !Sub '{{resolve:secretsmanager:dev/crumbs/alb/arn:SecretString}}'
-      Port: 80
-      Protocol: HTTP
+      SslPolicy: ELBSecurityPolicy-2016-08
+      Port: 443
+      Protocol: HTTPS
+      Certificates:
+        - CertificateArn: arn:aws:acm:us-east-1:728482858339:certificate/9fbb4da2-3e50-4d4f-bc39-2659acd59417
+
+
+
 
   # Default Target Group
   DefaultTargetGroup:
