@@ -2,7 +2,7 @@ resource "aws_db_instance" "relation-db" {
     identifier = "${var.stack-name}-db"
     db_subnet_group_name = aws_db_subnet_group.private-subnet-group.name
     name = "${var.stack-name}Database"
-    instance_class = "db.t2.micro"
+    instance_class = "db.t2.large"
     allocated_storage = "20"
     engine = "MySQL"
     engine_version = "8.0.16"
