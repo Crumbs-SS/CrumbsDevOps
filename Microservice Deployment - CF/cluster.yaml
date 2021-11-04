@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: "Order: 3 | ECS Cluster and Microservices"
+Description: "ECS Cluster and Microservices"
 
 Parameters:
   MicroserviceTemplateURL:
@@ -189,7 +189,7 @@ Resources:
       Port: 443
       Protocol: HTTPS
       Certificates:
-        - CertificateArn: arn:aws:acm:us-east-1:728482858339:certificate/9fbb4da2-3e50-4d4f-bc39-2659acd59417
+        - CertificateArn: !Sub '{{resolve:secretsmanager:dev/crumbs/listener/cert:SecretString}}'
 
 
 
